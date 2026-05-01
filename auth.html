@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NirogAI — Sign In</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --teal:#00B8A9;--teal2:#00958A;--teal-g:linear-gradient(135deg,#00B8A9,#00958A);
+  --ink:#09181A;--ink2:#1E3638;--mute:#607B7D;--faint:#E8F2F2;--border:#D4E8E8;
+  --white:#fff;--bg:#F0F7F7;--red:#F23030;--green:#00B87A;--amber:#F5A623;
+  --purple:#6C5CE7;--gold:#F5A623;
+}
+*{font-family:'Sora',sans-serif;}
+html,body{min-height:100vh;background:var(--bg);}
+
+/* SPLIT LAYOUT */
+.wrap{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;}
+
+/* LEFT — Visual Brand Panel */
+.left{background:var(--ink);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:48px;}
+.left-bg{position:absolute;inset:0;background:linear-gradient(145deg,#09181A 0%,#0f2e2e 50%,#0a2020 100%);}
+.left-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,184,169,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,184,169,0.06) 1px,transparent 1px);background-size:40px 40px;}
+.left-glow{position:absolute;top:-100px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(0,184,169,0.15) 0%,transparent 70%);}
+.left-glow2{position:absolute;bottom:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(0,184,169,0.08) 0%,transparent 70%);}
+.left-content{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;}
+.left-logo{display:flex;align-items:center;gap:12px;margin-bottom:auto;}
+.logo-mark{width:44px;height:44px;border-radius:14px;background:var(--teal-g);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:22px;color:white;box-shadow:0 8px 24px rgba(0,184,169,0.4);}
+.logo-text{font-family:'Instrument Serif',serif;font-size:24px;color:white;letter-spacing:-.3px;}
+.logo-text em{color:var(--teal);font-style:italic;}
+.left-hero{margin:auto 0;}
+.left-hero h1{font-family:'Instrument Serif',serif;font-size:clamp(32px,3.5vw,52px);line-height:1.1;color:white;margin-bottom:16px;letter-spacing:-.5px;}
+.left-hero h1 em{color:var(--teal);font-style:italic;}
+.left-hero p{font-size:15px;color:rgba(255,255,255,0.55);line-height:1.7;max-width:360px;}
+.stats-row{display:flex;gap:24px;margin-top:32px;}
+.stat-item{text-align:left;}
+.stat-num{font-family:'Instrument Serif',serif;font-size:28px;color:var(--teal);line-height:1;}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:500;}
+.left-features{display:flex;flex-direction:column;gap:12px;margin-top:auto;}
+.feat{display:flex;align-items:center;gap:12px;}
+.feat-dot{width:36px;height:36px;border-radius:10px;background:rgba(0,184,169,0.12);border:1px solid rgba(0,184,169,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.feat-text{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.4;}
+.feat-text b{color:white;}
+
+/* RIGHT — Auth Panel */
+.right{background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:48px 52px;overflow-y:auto;}
+
+/* ROLE SELECTOR */
+.role-wrap{margin-bottom:28px;}
+.role-title{font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;}
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.role-btn{padding:12px 8px;border-radius:14px;border:2px solid var(--border);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;position:relative;}
+.role-btn:hover{border-color:var(--teal);background:rgba(0,184,169,0.04);}
+.role-btn.active{border-color:var(--teal);background:rgba(0,184,169,0.06);}
+.role-btn .ri{font-size:22px;margin-bottom:5px;}
+.role-btn .rl{font-size:12px;font-weight:700;color:var(--ink);}
+.role-btn .rs{font-size:10px;color:var(--mute);}
+.role-btn.active .rl{color:var(--teal2);}
+.role-check{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:var(--teal);display:none;align-items:center;justify-content:center;}
+.role-check::after{content:'✓';font-size:9px;color:white;font-weight:700;}
+.role-btn.active .role-check{display:flex;}
+
+/* FORM */
+.form-head{margin-bottom:24px;}
+.form-head h2{font-family:'Instrument Serif',serif;font-size:28px;color:var(--ink);margin-bottom:4px;letter-spacing:-.3px;}
+.form-head h2 em{color:var(--teal);font-style:italic;}
+.form-head p{font-size:13px;color:var(--mute);line-height:1.5;}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:22px;border:1px solid var(--border);}
+.tab{flex:1;padding:10px;border-radius:9px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer;transition:all .2s;font-family:'Sora',sans-serif;}
+.tab.on{background:var(--white);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+
+/* PANELS */
+.pnl{display:none;animation:fadeUp .22s ease;}
+.pnl.on{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* INPUTS */
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);margin-bottom:6px;letter-spacing:.2px;}
+.inp-wrap{position:relative;}
+.inp-wrap .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+.inp{width:100%;padding:12px 14px 12px 42px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Sora',sans-serif;color:var(--ink);outline:none;transition:all .2s;background:var(--bg);}
+.inp:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3px rgba(0,184,169,0.1);}
+.inp.no-ico{padding-left:14px;}
+.eye-btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--mute);font-size:16px;background:none;border:none;padding:0;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ph-wrap{display:flex;gap:8px;}
+.ph-cc{padding:12px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;}
+.ph-inp{flex:1;}
+.forgot{text-align:right;margin-bottom:14px;}
+.forgot a{font-size:12px;color:var(--teal2);font-weight:600;cursor:pointer;text-decoration:none;}
+.terms{display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;}
+.terms input[type=checkbox]{width:15px;height:15px;accent-color:var(--teal);margin-top:2px;flex-shrink:0;}
+.terms label{font-size:12px;color:var(--mute);line-height:1.5;}
+.terms label a{color:var(--teal2);font-weight:600;text-decoration:none;}
+
+/* BUTTONS */
+.btn-main{width:100%;padding:14px;border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;transition:all .2s;color:white;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-main.teal{background:var(--teal-g);box-shadow:0 6px 20px rgba(0,184,169,0.3);}
+.btn-main.teal:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,184,169,0.4);}
+.btn-main.purple{background:linear-gradient(135deg,#6C5CE7,#5B4BD6);box-shadow:0 6px 20px rgba(108,92,231,0.3);}
+.btn-main.amber{background:linear-gradient(135deg,#F5A623,#E09010);box-shadow:0 6px 20px rgba(245,166,35,0.3);}
+.btn-main:disabled{opacity:.6;cursor:not-allowed;transform:none!important;}
+.btn-google{width:100%;padding:13px;border:1.5px solid var(--border);border-radius:13px;background:var(--white);font-size:14px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink);transition:all .2s;margin-top:10px;}
+.btn-google:hover{border-color:var(--teal);background:var(--bg);}
+.or{display:flex;align-items:center;gap:10px;margin:14px 0;}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--border);}
+.or span{font-size:11px;color:var(--mute);white-space:nowrap;}
+
+/* ALERTS */
+.err{background:#FEF2F2;border:1px solid #FCA5A5;border-radius:11px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;line-height:1.5;}
+.ok{background:#F0FDF4;border:1px solid #86EFAC;border-radius:11px;padding:10px 14px;font-size:13px;color:#166534;margin-bottom:14px;display:none;line-height:1.5;}
+
+/* SUCCESS */
+.suc{display:none;text-align:center;padding:12px 0;animation:fadeUp .4s ease;}
+.suc.on{display:block;}
+.suc-ring{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:30px;}
+.suc-ring.teal{background:rgba(0,184,169,0.12);border:3px solid rgba(0,184,169,0.3);}
+.suc-ring.pu{background:rgba(108,92,231,0.1);border:3px solid rgba(108,92,231,0.25);}
+.suc-ring.amb{background:rgba(245,166,35,0.1);border:3px solid rgba(245,166,35,0.25);}
+.suc h3{font-family:'Instrument Serif',serif;font-size:24px;color:var(--ink);margin-bottom:8px;}
+.suc p{font-size:13px;color:var(--mute);line-height:1.6;margin-bottom:20px;}
+.suc-btn{display:inline-block;padding:12px 28px;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;color:white;border:none;cursor:pointer;font-family:'Sora',sans-serif;}
+.suc-btn.teal{background:var(--teal-g);}
+.suc-btn.pu{background:linear-gradient(135deg,#6C5CE7,#5B4BD6);}
+
+/* DOCTOR ID REVEAL */
+.dr-id-reveal{background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(108,92,231,.04));border:1.5px solid rgba(108,92,231,.2);border-radius:14px;padding:16px;margin:12px 0;text-align:center;}
+.dr-id-reveal p{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.6px;margin-bottom:6px;}
+.dr-id-val{font-family:'Instrument Serif',serif;font-size:30px;color:var(--purple);letter-spacing:4px;font-weight:700;}
+.dr-id-note{font-size:11px;color:var(--mute);margin-top:5px;}
+
+/* ADMIN BADGE */
+.admin-badge{background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.05));border:1.5px solid rgba(245,166,35,.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:#92400E;}
+.admin-badge .ab-icon{font-size:20px;}
+
+/* OTP */
+.otp-row{display:flex;gap:8px;justify-content:center;margin:8px 0;}
+.otp-i{width:46px;height:54px;border:1.5px solid var(--border);border-radius:12px;font-size:20px;font-weight:800;text-align:center;background:var(--bg);color:var(--ink);outline:none;transition:all .2s;font-family:'Sora',sans-serif;}
+.otp-i:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3px rgba(0,184,169,0.1);}
+.resend{text-align:center;font-size:12px;color:var(--mute);margin-top:8px;}
+.resend a{color:var(--teal2);font-weight:600;cursor:pointer;}
+
+/* SPINNER */
+.sp{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .7s linear infinite;flex-shrink:0;}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+@media(max-width:900px){.wrap{grid-template-columns:1fr;}.left{display:none;}.right{padding:28px 20px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- LEFT BRAND PANEL -->
+<div class="left">
+  <div class="left-bg"></div>
+  <div class="left-grid"></div>
+  <div class="left-glow"></div>
+  <div class="left-glow2"></div>
+  <div class="left-content">
+    <div class="left-logo">
+      <div class="logo-mark">N</div>
+      <div class="logo-text">Nirog<em>AI</em></div>
+    </div>
+    <div class="left-hero">
+      <h1>Healthcare,<br><em>reimagined</em><br>for Bharat.</h1>
+      <p>AI diagnostics, real doctors, hospital booking — all in one platform. Built for 140 crore Indians.</p>
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-num">2.4K+</div><div class="stat-lbl">Patients</div></div>
+        <div class="stat-item"><div class="stat-num">180+</div><div class="stat-lbl">Doctors</div></div>
+        <div class="stat-item"><div class="stat-num">100%</div><div class="stat-lbl">Free Booking</div></div>
+      </div>
+    </div>
+    <div class="left-features">
+      <div class="feat"><div class="feat-dot">🔬</div><div class="feat-text"><b>NadiBox Hardware</b> — Real vitals, anywhere in India</div></div>
+      <div class="feat"><div class="feat-dot">🤖</div><div class="feat-text"><b>Dr. Aanya AI</b> — 24/7 intelligent health companion</div></div>
+      <div class="feat"><div class="feat-dot">🏥</div><div class="feat-text"><b>Hospital Booking</b> — Free slots, instant confirmation</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT AUTH PANEL -->
+<div class="right">
+
+  <!-- ROLE SELECTOR -->
+  <div class="role-wrap">
+    <div class="role-title">I am a</div>
+    <div class="role-grid">
+      <div class="role-btn active" id="rPat" onclick="setRole('patient')">
+        <div class="role-check"></div>
+        <div class="ri">🏥</div>
+        <div class="rl">Patient</div>
+        <div class="rs">Find care</div>
+      </div>
+      <div class="role-btn" id="rDr" onclick="setRole('doctor')">
+        <div class="role-check"></div>
+        <div class="ri">👨‍⚕️</div>
+        <div class="rl">Doctor</div>
+        <div class="rs">Manage patients</div>
+      </div>
+      <div class="role-btn" id="rAdm" onclick="setRole('admin')">
+        <div class="role-check"></div>
+        <div class="ri">🛡️</div>
+        <div class="rl">Admin</div>
+        <div class="rs">Platform control</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PATIENT SECTION ══ -->
+  <div id="secPat">
+    <div class="tabs">
+      <button class="tab on" id="ptLT" onclick="ptTab('login')">Sign In</button>
+      <button class="tab" id="ptST" onclick="ptTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Patient Login -->
+    <div class="pnl on" id="ptLP">
+      <div class="form-head">
+        <h2>Welcome <em>back</em> 👋</h2>
+        <p>Sign in with your email or phone number</p>
+      </div>
+      <div class="err" id="plErr"></div>
+      <div class="ok" id="plOk"></div>
+      <div class="fg">
+        <label>Email or Phone Number</label>
+        <div class="inp-wrap">
+          <span class="ico">📧</span>
+          <input class="inp" type="text" id="plId" placeholder="email@example.com or 9XXXXXXXXX" autocomplete="username"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="inp-wrap">
+          <span class="ico">🔒</span>
+          <input class="inp" type="password" id="plPw" placeholder="Your password" autocomplete="current-password"/>
+          <button class="eye-btn" onclick="eyeToggle('plPw',this)">👁</button>
+        </div>
+      </div>
+      <div class="forgot"><a onclick="doForgot()">Forgot password?</a></div>
+      <button class="btn-main teal" id="plBtn" onclick="patLogin()">Sign In →</button>
+      <div class="or"><span>or continue with</span></div>
+      <button class="btn-google" onclick="googleLogin()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Continue with Google</button>
+      <div class="suc" id="plSuc">
+        <div class="suc-ring teal">✅</div>
+        <h3>Welcome back!</h3>
+        <p>Taking you to your dashboard...</p>
+        <a href="/dashboard" class="suc-btn teal">Open Dashboard →</a>
+      </div>
+    </div>
+
+    <!-- Patient Signup -->
+    <div class="pnl" id="ptSP">
+      <div class="form-head">
+        <h2>Join <em>NirogAI</em> ✨</h2>
+        <p>Free forever — sign up with Google or phone</p>
+      </div>
+      <div class="err" id="psErr"></div>
+      <button class="btn-google" onclick="googleLogin()" style="margin-bottom:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Sign up with Google
+      </button>
+      <div class="or"><span>or sign up with phone OTP</span></div>
+      <div id="spPhSec">
+        <div class="frow" style="margin-bottom:12px;">
+          <div class="fg" style="margin-bottom:0;"><label>First Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="spFn" placeholder="Rahul"/></div></div>
+          <div class="fg" style="margin-bottom:0;"><label>Last Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="spLn" placeholder="Sharma"/></div></div>
+        </div>
+        <div class="fg">
+          <label>Mobile Number</label>
+          <div class="ph-wrap"><div class="ph-cc">🇮🇳 +91</div><input class="inp no-ico ph-inp" type="tel" id="spPh" placeholder="9XXXXXXXXX" maxlength="10"/></div>
+        </div>
+        <button class="btn-main teal" id="spSendBtn" onclick="sendPhOtp()">Send OTP →</button>
+        <div id="spOtpSec" style="display:none;margin-top:14px;">
+          <div class="fg"><label>Enter 6-digit OTP</label></div>
+          <div class="otp-row" id="spOtpRow"></div>
+          <div class="resend">Resend in <b id="spTimer">30</b>s · <a onclick="sendPhOtp()">Resend</a></div>
+          <button class="btn-main teal" id="spVerBtn" style="margin-top:12px;" onclick="verifyPhOtp()">Verify & Create Account →</button>
+        </div>
+      </div>
+      <div class="or"><span>or sign up with email</span></div>
+      <div class="frow">
+        <div class="fg"><label>First Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="seFn" placeholder="Rahul"/></div></div>
+        <div class="fg"><label>Last Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="seLn" placeholder="Sharma"/></div></div>
+      </div>
+      <div class="fg"><label>Email</label><div class="inp-wrap"><span class="ico">📧</span><input class="inp" type="email" id="seEm" placeholder="rahul@example.com"/></div></div>
+      <div class="fg"><label>Password</label><div class="inp-wrap"><span class="ico">🔒</span><input class="inp" type="password" id="sePw" placeholder="Min 6 characters"/><button class="eye-btn" onclick="eyeToggle('sePw',this)">👁</button></div></div>
+      <div class="terms"><input type="checkbox" id="seT"/><label for="seT">I agree to <a href="#">Terms</a> & <a href="#">Privacy Policy</a>. Dr. Aanya is an AI companion, not a licensed doctor.</label></div>
+      <button class="btn-main teal" id="seBtn" onclick="emailSignup()">Create Account →</button>
+      <div class="suc" id="psSuc">
+        <div class="suc-ring teal">🎉</div>
+        <h3>Account Created!</h3>
+        <p>Check your email to verify, then sign in.</p>
+        <button class="suc-btn teal" onclick="ptTab('login')">Go to Sign In →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DOCTOR SECTION ══ -->
+  <div id="secDr" style="display:none;">
+    <div class="tabs">
+      <button class="tab on" id="drLT" onclick="drTab('login')">Doctor Sign In</button>
+      <button class="tab" id="drRT" onclick="drTab('register')">Register</button>
+    </div>
+
+    <!-- Doctor Login -->
+    <div class="pnl on" id="drLP">
+      <div class="form-head">
+        <h2>Doctor <em>Portal</em> 🩺</h2>
+        <p>Sign in with your unique Doctor ID</p>
+      </div>
+      <div class="err" id="dlErr"></div>
+      <div class="fg">
+        <label>Doctor ID</label>
+        <div class="inp-wrap"><span class="ico">🩺</span><input class="inp" id="dlId" placeholder="DR-XXXXX" style="text-transform:uppercase;letter-spacing:2px;font-weight:700;"/></div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="inp-wrap"><span class="ico">🔒</span><input class="inp" type="password" id="dlPw" placeholder="Your password"/><button class="eye-btn" onclick="eyeToggle('dlPw',this)">👁</button></div>
+      </div>
+      <button class="btn-main purple" id="dlBtn" onclick="doctorLogin()">Sign In to Portal →</button>
+      <div class="suc" id="dlSuc">
+        <div class="suc-ring pu">🩺</div>
+        <h3>Welcome, Doctor!</h3>
+        <p>Redirecting to your dashboard...</p>
+        <a href="/doctor-dashboard" class="suc-btn pu">Open Dashboard →</a>
+      </div>
+    </div>
+
+    <!-- Doctor Register -->
+    <div class="pnl" id="drRP">
+      <div class="form-head">
+        <h2>Join as <em>Doctor</em> 🩺</h2>
+        <p>Register and get your unique Doctor ID instantly</p>
+      </div>
+      <div class="err" id="drErr"></div>
+      <div class="frow">
+        <div class="fg"><label>First Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="drFn" placeholder="Anjali"/></div></div>
+        <div class="fg"><label>Last Name</label><div class="inp-wrap"><span class="ico">👤</span><input class="inp" id="drLn" placeholder="Verma"/></div></div>
+      </div>
+      <div class="fg"><label>Email</label><div class="inp-wrap"><span class="ico">📧</span><input class="inp" type="email" id="drEm" placeholder="dr@hospital.com"/></div></div>
+      <div class="fg"><label>Phone</label><div class="ph-wrap"><div class="ph-cc">🇮🇳 +91</div><input class="inp no-ico ph-inp" type="tel" id="drPh" placeholder="9XXXXXXXXX" maxlength="10"/></div></div>
+      <div class="frow">
+        <div class="fg"><label>Specialization</label>
+          <select class="inp no-ico" id="drSp">
+            <option value="">Select...</option>
+            <option>General Physician</option><option>Cardiologist</option><option>Diabetologist</option>
+            <option>Pulmonologist</option><option>Neurologist</option><option>Pediatrician</option>
+            <option>Gynecologist</option><option>ENT Specialist</option><option>Orthopedic</option><option>Dermatologist</option><option>Psychiatrist</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Experience (yrs)</label><div class="inp-wrap"><span class="ico">📅</span><input class="inp" type="number" id="drEx" placeholder="e.g. 5"/></div></div>
+      </div>
+      <div class="fg"><label>Medical Reg. No.</label><div class="inp-wrap"><span class="ico">📋</span><input class="inp" id="drRg" placeholder="MCI / State Council No."/></div></div>
+      <div class="fg"><label>Password</label><div class="inp-wrap"><span class="ico">🔒</span><input class="inp" type="password" id="drPw" placeholder="Min 6 characters"/><button class="eye-btn" onclick="eyeToggle('drPw',this)">👁</button></div></div>
+      <div class="terms"><input type="checkbox" id="drTc"/><label for="drTc">I am a licensed medical professional and agree to <a href="#">Terms</a> & <a href="#">Doctor Ethics</a>.</label></div>
+      <button class="btn-main purple" id="drRegBtn" onclick="doctorRegister()">Register & Get My Doctor ID →</button>
+      <div class="suc" id="drRS">
+        <div class="suc-ring pu">🩺</div>
+        <h3>Registration Successful!</h3>
+        <div class="dr-id-reveal">
+          <p>YOUR UNIQUE DOCTOR ID</p>
+          <div class="dr-id-val" id="newDrId">DR-XXXXX</div>
+          <div class="dr-id-note">⚠️ Save this ID — you'll need it to sign in</div>
+        </div>
+        <p>Verify your email, then sign in with your Doctor ID.</p>
+        <button class="suc-btn pu" onclick="drTab('login')">Go to Sign In →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN SECTION ══ -->
+  <div id="secAdm" style="display:none;">
+    <div class="form-head">
+      <h2>Admin <em>Access</em> 🛡️</h2>
+      <p>Restricted — authorized personnel only</p>
+    </div>
+    <div class="admin-badge">
+      <span class="ab-icon">🔐</span>
+      <span>Admin credentials are fixed. Contact your system administrator if you need access.</span>
+    </div>
+    <div class="err" id="admErr"></div>
+    <div class="fg">
+      <label>Admin Email</label>
+      <div class="inp-wrap"><span class="ico">📧</span><input class="inp" type="email" id="admEm" placeholder="admin@nirogai.com"/></div>
+    </div>
+    <div class="fg">
+      <label>Admin Password</label>
+      <div class="inp-wrap"><span class="ico">🔒</span><input class="inp" type="password" id="admPw" placeholder="Admin password"/><button class="eye-btn" onclick="eyeToggle('admPw',this)">👁</button></div>
+    </div>
+    <button class="btn-main amber" id="admBtn" onclick="adminLogin()">Access Admin Panel →</button>
+    <div class="suc" id="admSuc">
+      <div class="suc-ring amb">🛡️</div>
+      <h3>Access Granted!</h3>
+      <p>Redirecting to admin dashboard...</p>
+      <a href="/admin-dashboard" class="suc-btn" style="background:var(--amber);">Open Admin Panel →</a>
+    </div>
+  </div>
+
+</div><!-- right -->
+</div><!-- wrap -->
+
+<script>
+const SB_URL='https://snsmcmxxlsolnkeukyog.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuc21jbXh4bHNvbG5rZXVreW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDY1MTEsImV4cCI6MjA4ODEyMjUxMX0.svnnhqmMTdTZOmdr0TcKi3yRi_hdPeyAUYz0sOOExHY';
+// Fixed admin credentials
+const ADMIN_EMAIL='admin@nirogai.com';
+const ADMIN_PASS='NirogAdmin@2024';
+let sb=null;
+
+function initSb(){if(window.supabase&&window.supabase.createClient){sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return true;}return false;}
+initSb();
+
+async function getSb(){
+  if(sb)return sb;
+  for(const u of['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js']){
+    try{await new Promise((r,j)=>{const s=document.createElement('script');s.src=u;s.onload=r;s.onerror=j;document.head.appendChild(s);});if(initSb())return sb;}catch{}
+  }
+  throw new Error('Connection failed. Please refresh.');
+}
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  buildOtp('spOtpRow',6);
+  try{
+    const c=await getSb();
+    if(window.location.hash.includes('type=recovery')){window.location.href='/reset-password'+window.location.hash;return;}
+    const {data:{session}}=await c.auth.getSession();
+    if(session){redirect(session.user);}
+  }catch(e){console.warn(e);}
+});
+
+async function redirect(user){
+  if(!sb)return;
+  try{const {data:dr}=await sb.from('doctors').select('id').eq('user_id',user.id).maybeSingle();if(dr){window.location.href='/doctor-dashboard';return;}}catch{}
+  try{const {data:adm}=await sb.from('admins').select('id').eq('user_id',user.id).maybeSingle();if(adm){window.location.href='/admin-dashboard';return;}}catch{}
+  window.location.href='/dashboard';
+}
+
+// ROLE
+function setRole(r){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(r==='patient'?'rPat':r==='doctor'?'rDr':'rAdm').classList.add('active');
+  document.getElementById('secPat').style.display=r==='patient'?'block':'none';
+  document.getElementById('secDr').style.display=r==='doctor'?'block':'none';
+  document.getElementById('secAdm').style.display=r==='admin'?'block':'none';
+}
+
+// TABS
+function ptTab(t){const l=t==='login';['ptLT','ptST'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',l?i===0:i===1));['ptLP','ptSP'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',l?i===0:i===1));}
+function drTab(t){const l=t==='login';['drLT','drRT'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',l?i===0:i===1));['drLP','drRP'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',l?i===0:i===1));}
+
+// HELPERS
+function eyeToggle(id,el){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';el.textContent=i.type==='password'?'👁':'🙈';}
+function E(id,m){const e=document.getElementById(id);e.innerHTML='⚠️ '+m;e.style.display='block';setTimeout(()=>e.style.display='none',7000);}
+function OK(id,m){const e=document.getElementById(id);e.innerHTML='✅ '+m;e.style.display='block';}
+function busy(id,on,txt){const b=document.getElementById(id);b.disabled=on;b.innerHTML=on?'<span class="sp"></span> Please wait...':txt;}
+function pe(e){const m=(e&&e.message)||String(e);if(/invalid.login|invalid_credentials/i.test(m))return'Email/Phone ya password galat hai.';if(/email not confirmed/i.test(m))return'Email verify karo — Gmail check karo.';if(/already registered|User already/i.test(m))return'Account pehle se exist karta hai. Sign in karo.';if(/otp|token.*invalid|expired/i.test(m))return'OTP galat ya expire ho gaya.';if(/fetch|network|Failed to fetch/i.test(m))return'Network error — internet check karo aur refresh karo.';return m||'Kuch galat hua. Dobara try karo.';}
+function genDrId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return'DR-'+Array.from({length:5},()=>c[~~(Math.random()*c.length)]).join('');}
+
+// OTP BUILDER
+function buildOtp(cId,n){const c=document.getElementById(cId);c.innerHTML='';for(let i=0;i<n;i++){const inp=document.createElement('input');inp.className='otp-i';inp.type='text';inp.maxLength=1;inp.inputMode='numeric';inp.addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/,'');if(e.target.value&&e.target.nextElementSibling)e.target.nextElementSibling.focus();});inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&e.target.previousElementSibling)e.target.previousElementSibling.focus();});inp.addEventListener('paste',e=>{const p=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');c.querySelectorAll('.otp-i').forEach((x,i)=>{if(p[i])x.value=p[i];});e.preventDefault();});c.appendChild(inp);}}
+function getOtp(id){return Array.from(document.getElementById(id).querySelectorAll('.otp-i')).map(x=>x.value).join('');}
+let timerRef=null;
+function startTimer(id,s){clearInterval(timerRef);const el=document.getElementById(id);let t=s;el.textContent=t;timerRef=setInterval(()=>{t--;el.textContent=t;if(t<=0)clearInterval(timerRef);},1000);}
+
+// ── PATIENT LOGIN ─────────────────────────────────────
+async function patLogin(){
+  let c;try{c=await getSb();}catch(e){E('plErr',pe(e));return;}
+  const raw=document.getElementById('plId').value.trim();
+  const pw=document.getElementById('plPw').value;
+  if(!raw){E('plErr','Email ya phone daalo');return;}
+  if(!pw){E('plErr','Password daalo');return;}
+  const isPhone=/^\d{10}$/.test(raw.replace(/\s/g,''));
+  busy('plBtn',true);
+  try{
+    let data,error;
+    if(!isPhone){
+      ({data,error}=await c.auth.signInWithPassword({email:raw,password:pw}));
+    }else{
+      // Phone — find email from doctors or profiles
+      const {data:dr}=await c.from('doctors').select('email').eq('phone',raw).maybeSingle().catch(()=>({data:null}));
+      if(dr){({data,error}=await c.auth.signInWithPassword({email:dr.email,password:pw}));}
+      else{busy('plBtn',false,'Sign In →');E('plErr','Phone se login ke liye apna registered email use karein.');return;}
+    }
+    if(error)throw error;
+    // Block doctor from patient portal
+    const {data:dr}=await c.from('doctors').select('id').eq('user_id',data.user.id).maybeSingle().catch(()=>({data:null}));
+    if(dr){await c.auth.signOut();throw new Error('Aap doctor hain — "Doctor" role select karein.');}
+    busy('plBtn',false,'Sign In →');
+    document.getElementById('plSuc').classList.add('on');
+    setTimeout(()=>window.location.href='/dashboard',1500);
+  }catch(e){busy('plBtn',false,'Sign In →');E('plErr',pe(e));}
+}
+
+// ── GOOGLE LOGIN ──────────────────────────────────────
+async function googleLogin(){
+  let c;try{c=await getSb();}catch(e){E('psErr',pe(e));return;}
+  const {error}=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+'/dashboard'}});
+  if(error)E('psErr',pe(error));
+}
+
+// ── PHONE OTP SIGNUP ──────────────────────────────────
+async function sendPhOtp(){
+  let c;try{c=await getSb();}catch(e){E('psErr',pe(e));return;}
+  const ph=document.getElementById('spPh').value.trim();
+  if(!ph||ph.length<10){E('psErr','Valid 10-digit mobile number daalo');return;}
+  busy('spSendBtn',true);
+  try{
+    const {error}=await c.auth.signInWithOtp({phone:'+91'+ph});
+    if(error)throw error;
+    busy('spSendBtn',false,'Resend OTP');
+    document.getElementById('spOtpSec').style.display='block';
+    startTimer('spTimer',30);
+    OK('psErr','OTP sent! Phone check karo.');
+  }catch(e){busy('spSendBtn',false,'Send OTP →');E('psErr',pe(e));}
+}
+
+async function verifyPhOtp(){
+  let c;try{c=await getSb();}catch(e){E('psErr',pe(e));return;}
+  const ph=document.getElementById('spPh').value.trim();
+  const otp=getOtp('spOtpRow');
+  if(otp.length<6){E('psErr','6-digit OTP poora daalo');return;}
+  busy('spVerBtn',true);
+  try{
+    const {data,error}=await c.auth.verifyOtp({phone:'+91'+ph,token:otp,type:'sms'});
+    if(error)throw error;
+    const fn=document.getElementById('spFn').value.trim();
+    const ln=document.getElementById('spLn').value.trim();
+    if(fn)await c.auth.updateUser({data:{full_name:(fn+' '+ln).trim(),first_name:fn,last_name:ln,phone:ph,role:'patient'}});
+    busy('spVerBtn',false,'Verify →');
+    document.getElementById('psSuc').classList.add('on');
+    setTimeout(()=>window.location.href='/dashboard',1500);
+  }catch(e){busy('spVerBtn',false,'Verify & Create Account →');E('psErr',pe(e));}
+}
+
+// ── EMAIL SIGNUP ──────────────────────────────────────
+async function emailSignup(){
+  let c;try{c=await getSb();}catch(e){E('psErr',pe(e));return;}
+  const fn=document.getElementById('seFn').value.trim();
+  const ln=document.getElementById('seLn').value.trim();
+  const em=document.getElementById('seEm').value.trim();
+  const pw=document.getElementById('sePw').value;
+  const t=document.getElementById('seT').checked;
+  if(!fn){E('psErr','First name daalo');return;}
+  if(!em||!em.includes('@')){E('psErr','Valid email daalo');return;}
+  if(!pw||pw.length<6){E('psErr','Password minimum 6 characters');return;}
+  if(!t){E('psErr','Terms accept karo');return;}
+  busy('seBtn',true);
+  try{
+    const {data,error}=await c.auth.signUp({email:em,password:pw,options:{data:{full_name:(fn+' '+ln).trim(),first_name:fn,last_name:ln,role:'patient'},emailRedirectTo:window.location.origin+'/auth'}});
+    if(error)throw error;
+    const {data:ld,error:le}=await c.auth.signInWithPassword({email:em,password:pw});
+    if(!le&&ld.session){window.location.href='/dashboard';return;}
+    busy('seBtn',false,'Create Account →');
+    document.getElementById('seBtn').style.display='none';
+    document.getElementById('psSuc').classList.add('on');
+  }catch(e){busy('seBtn',false,'Create Account →');E('psErr',pe(e));}
+}
+
+// ── DOCTOR LOGIN ──────────────────────────────────────
+async function doctorLogin(){
+  let c;try{c=await getSb();}catch(e){E('dlErr',pe(e));return;}
+  const rawId=document.getElementById('dlId').value.trim().toUpperCase();
+  const pw=document.getElementById('dlPw').value;
+  if(!rawId||!rawId.startsWith('DR-')){E('dlErr','Valid Doctor ID daalo (DR-XXXXX)');return;}
+  if(!pw){E('dlErr','Password daalo');return;}
+  busy('dlBtn',true);
+  try{
+    const {data:drRow,error:drErr}=await c.from('doctors').select('email').eq('doctor_id',rawId).maybeSingle();
+    if(drErr||!drRow){busy('dlBtn',false,'Sign In to Portal →');E('dlErr','Doctor ID nahi mila. Check karo.');return;}
+    const {data,error}=await c.auth.signInWithPassword({email:drRow.email,password:pw});
+    if(error)throw error;
+    busy('dlBtn',false,'Sign In to Portal →');
+    document.getElementById('dlSuc').classList.add('on');
+    setTimeout(()=>window.location.href='/doctor-dashboard',1500);
+  }catch(e){busy('dlBtn',false,'Sign In to Portal →');E('dlErr',pe(e));}
+}
+
+// ── DOCTOR REGISTER ───────────────────────────────────
+async function doctorRegister(){
+  let c;try{c=await getSb();}catch(e){E('drErr',pe(e));return;}
+  const fn=document.getElementById('drFn').value.trim(),ln=document.getElementById('drLn').value.trim();
+  const em=document.getElementById('drEm').value.trim(),ph=document.getElementById('drPh').value.trim();
+  const sp=document.getElementById('drSp').value,ex=document.getElementById('drEx').value;
+  const rg=document.getElementById('drRg').value.trim(),pw=document.getElementById('drPw').value;
+  const tc=document.getElementById('drTc').checked;
+  if(!fn){E('drErr','Naam daalo');return;}
+  if(!em||!em.includes('@')){E('drErr','Valid email daalo');return;}
+  if(!sp){E('drErr','Specialization select karo');return;}
+  if(!rg){E('drErr','Medical registration number daalo');return;}
+  if(!pw||pw.length<6){E('drErr','Password minimum 6 characters');return;}
+  if(!tc){E('drErr','Terms accept karo');return;}
+  busy('drRegBtn',true);
+  const did=genDrId();const fullName=(fn+' '+ln).trim();
+  try{
+    const {data,error}=await c.auth.signUp({email:em,password:pw,options:{data:{full_name:fullName,phone:ph,role:'doctor',doctor_id:did},emailRedirectTo:window.location.origin+'/auth'}});
+    if(error)throw error;
+    await c.from('doctors').insert({user_id:data.user.id,doctor_id:did,email:em,full_name:fullName,phone:ph,specialization:sp,experience_years:ex?parseInt(ex):null,registration_number:rg,status:'pending',created_at:new Date().toISOString()});
+    busy('drRegBtn',false,'Register & Get My Doctor ID →');
+    document.getElementById('newDrId').textContent=did;
+    document.getElementById('drRegBtn').style.display='none';
+    document.getElementById('drRS').classList.add('on');
+  }catch(e){busy('drRegBtn',false,'Register & Get My Doctor ID →');E('drErr',pe(e));}
+}
+
+// ── ADMIN LOGIN (fixed credentials) ──────────────────
+async function adminLogin(){
+  const em=document.getElementById('admEm').value.trim();
+  const pw=document.getElementById('admPw').value;
+  if(!em){E('admErr','Email daalo');return;}
+  if(!pw){E('admErr','Password daalo');return;}
+  // Check fixed admin credentials
+  if(em!==ADMIN_EMAIL){E('admErr','Admin email galat hai.');return;}
+  if(pw!==ADMIN_PASS){E('admErr','Admin password galat hai.');return;}
+  busy('admBtn',true);
+  try{
+    let c=await getSb();
+    const {data,error}=await c.auth.signInWithPassword({email:em,password:pw});
+    if(error)throw error;
+    busy('admBtn',false,'Access Admin Panel →');
+    document.getElementById('admSuc').classList.add('on');
+    setTimeout(()=>window.location.href='/admin-dashboard',1500);
+  }catch(e){
+    // If Supabase auth fails, just do local check and redirect
+    if(em===ADMIN_EMAIL&&pw===ADMIN_PASS){
+      busy('admBtn',false,'Access Admin Panel →');
+      document.getElementById('admSuc').classList.add('on');
+      setTimeout(()=>window.location.href='/admin-dashboard',1500);
+    }else{
+      busy('admBtn',false,'Access Admin Panel →');E('admErr',pe(e));
+    }
+  }
+}
+
+// ── FORGOT PASSWORD ───────────────────────────────────
+async function doForgot(){
+  let c;try{c=await getSb();}catch(e){E('plErr',pe(e));return;}
+  const em=document.getElementById('plId').value.trim();
+  if(!em||!em.includes('@')){E('plErr','Pehle email field mein email daalo');return;}
+  try{
+    const {error}=await c.auth.resetPasswordForEmail(em,{redirectTo:window.location.origin+'/reset-password'});
+    if(error)throw error;
+    OK('plOk','Reset link bhej diya! Gmail check karo.');
+  }catch(e){E('plErr',pe(e));}
+}
+</script>
+</body>
+</html>
