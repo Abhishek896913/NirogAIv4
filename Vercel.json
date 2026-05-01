@@ -1,19 +1,16 @@
 {
-  "builds": [
-    {
-      "src": "**/*.html",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     { "handle": "filesystem" },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/auth$", "dest": "/auth.html" },
+    { "src": "^/dashboard$", "dest": "/dashboard.html" },
+    { "src": "^/admin-dashboard$", "dest": "/admin-dashboard.html" },
+    { "src": "^/doctor-dashboard$", "dest": "/doctor-dashboard.html" },
+    { "src": "^/dr-aanya$", "dest": "/dr-aanya.html" },
+    { "src": "^/hospitals$", "dest": "/hospitals.html" },
+    { "src": "^/reset-password$", "dest": "/reset-password.html" },
+    { "src": "^/video-consult$", "dest": "/video-consult.html" },
+    { "src": "^/vitals-cards$", "dest": "/vitals-cards.html" }
   ]
 }
