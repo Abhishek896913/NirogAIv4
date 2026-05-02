@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/auth", "destination": "/auth.html" },
+    { "source": "/auth", "destination": "/auth.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/dr-aanya", "destination": "/dr-aanya.html" },
     { "source": "/reset-password", "destination": "/reset-password.html" },
